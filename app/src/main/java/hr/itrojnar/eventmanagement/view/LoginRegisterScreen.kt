@@ -1,12 +1,17 @@
 package hr.itrojnar.eventmanagement.view
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -19,14 +24,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import hr.itrojnar.eventmanagement.R
+import hr.itrojnar.eventmanagement.utils.GradientButton
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginRegisterScreen(
     onLoginClick: (username: String, password: String) -> Unit,
@@ -37,6 +45,8 @@ fun LoginRegisterScreen(
     var isButtonEnabled by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
+
+    val gradient = Brush.horizontalGradient(listOf(Color(0xFFCF753A), Color(0xFFB33161)))
 
     Column(
         modifier = Modifier
@@ -61,7 +71,10 @@ fun LoginRegisterScreen(
             keyboardActions = KeyboardActions(
                 onDone = { focusManager.clearFocus() }
             ),
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+            shape = RoundedCornerShape(10.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
         )
 
         OutlinedTextField(
@@ -73,32 +86,43 @@ fun LoginRegisterScreen(
             label = { Text(stringResource(R.string.password)) },
             keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(
-                onDone = { focusManager.clearFocus()}
+                onDone = { focusManager.clearFocus() }
             ),
+            shape = RoundedCornerShape(10.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp)
         )
+
+        Spacer(modifier = Modifier.height(20.dp))
 
         Button(
             onClick = { onLoginClick(username, password) },
             enabled = isButtonEnabled,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp)
+                .background((gradient), shape = RoundedCornerShape(10.dp))
+                .height(ButtonDefaults.MinHeight + 5.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+            shape = RoundedCornerShape(10.dp),
         ) {
-            Text(stringResource(R.string.login))
+            Text(stringResource(R.string.login), color = Color.White)
         }
 
+        Spacer(modifier = Modifier.height(20.dp))
+        
         Button(
             onClick = onRegisterClick,
             enabled = username.isNotBlank() && password.length >= 4,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp)
+                .background((gradient), shape = RoundedCornerShape(10.dp))
+                .height(ButtonDefaults.MinHeight + 5.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+            shape = RoundedCornerShape(10.dp)
         ) {
             Text(
-                stringResource(R.string.register)
+                stringResource(R.string.register), color = Color.White
             )
         }
     }
