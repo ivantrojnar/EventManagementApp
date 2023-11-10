@@ -52,8 +52,9 @@ fun MainScreen(navHostController: NavHostController) {
     var userEvents by remember { mutableStateOf(emptyList<EventDTO>()) }
 
     val logoutClick: () -> Unit = {
+        println("LOGOUT click")
         navHostController.popBackStack()
-        navHostController.navigate(Graph.MAIN)
+        navHostController.navigate(Graph.ROOT)
     }
 
     LaunchedEffect(accessToken) {
