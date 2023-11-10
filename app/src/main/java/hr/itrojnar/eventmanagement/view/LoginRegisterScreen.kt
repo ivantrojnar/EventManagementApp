@@ -22,23 +22,23 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import hr.itrojnar.eventmanagement.R
-import hr.itrojnar.eventmanagement.utils.GradientButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginRegisterScreen(
     onLoginClick: (username: String, password: String) -> Unit,
-    onRegisterClick: () -> Unit
+    onRegisterClick: (username: String, password: String) -> Unit
 ) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -71,6 +71,7 @@ fun LoginRegisterScreen(
             keyboardActions = KeyboardActions(
                 onDone = { focusManager.clearFocus() }
             ),
+            maxLines = 1,
             shape = RoundedCornerShape(10.dp),
             modifier = Modifier
                 .fillMaxWidth()
@@ -84,10 +85,15 @@ fun LoginRegisterScreen(
                 isButtonEnabled = it.length >= 4
             },
             label = { Text(stringResource(R.string.password)) },
-            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+            visualTransformation = PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Done
+            ),
             keyboardActions = KeyboardActions(
                 onDone = { focusManager.clearFocus() }
             ),
+            maxLines = 1,
             shape = RoundedCornerShape(10.dp),
             modifier = Modifier
                 .fillMaxWidth()
@@ -112,7 +118,7 @@ fun LoginRegisterScreen(
         Spacer(modifier = Modifier.height(20.dp))
         
         Button(
-            onClick = onRegisterClick,
+            onClick = { onRegisterClick(username, password) },
             enabled = username.isNotBlank() && password.length >= 4,
             modifier = Modifier
                 .fillMaxWidth()
