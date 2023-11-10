@@ -5,9 +5,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import hr.itrojnar.eventmanagement.R
 import hr.itrojnar.eventmanagement.api.AuthRepository
 import hr.itrojnar.eventmanagement.api.RetrofitClient
 import hr.itrojnar.eventmanagement.utils.getUserInfo
@@ -32,6 +34,8 @@ fun RootNavGraph(navController: NavHostController) {
         composable(route = Graph.AUTH) {
             val coroutineScope = rememberCoroutineScope()
 
+            val userRegisterSuccesText = stringResource(id = R.string.user_registered_successfully)
+
             LoginRegisterScreen(
                 onLoginClick = { username, password ->
 
@@ -43,8 +47,6 @@ fun RootNavGraph(navController: NavHostController) {
                             val refreshToken = result.refreshToken
 
                             saveUserInfo(context, username, password, accessToken, refreshToken)
-                            val userAuthDetails = getUserInfo(context)
-                            println("User token: ${userAuthDetails.accessToken}")
 
                             navController.popBackStack()
                             navController.navigate(Graph.MAIN)
@@ -59,9 +61,7 @@ fun RootNavGraph(navController: NavHostController) {
                         try {
                             val result = authRepository.register(username, password)
                             if (result.isSuccessful) {
-                                println("User registered successfully: $username")
-                                Toast.makeText(context, "User registered successfully", Toast.LENGTH_SHORT).show()
-
+                                Toast.makeText(context, userRegisterSuccesText, Toast.LENGTH_SHORT).show()
                             } else {
                                 println("Registration failed: ${result.code()}")
                             }

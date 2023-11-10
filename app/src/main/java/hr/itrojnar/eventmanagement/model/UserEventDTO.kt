@@ -1,5 +1,6 @@
 package hr.itrojnar.eventmanagement.model
 
+import java.math.BigDecimal
 import java.time.LocalDate
 
 data class UserEventDTO(
@@ -12,5 +13,6 @@ data class UserEventDTO(
     val numAttendees: Int,
     val description: String,
     val date: LocalDate,
+    val price: BigDecimal,
     val tickets: List<TicketDTO>
 )

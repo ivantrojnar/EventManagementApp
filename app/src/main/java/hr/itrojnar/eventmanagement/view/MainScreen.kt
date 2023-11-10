@@ -52,7 +52,6 @@ fun MainScreen(navHostController: NavHostController) {
     var userEvents by remember { mutableStateOf(emptyList<EventDTO>()) }
 
     val logoutClick: () -> Unit = {
-        println("LOGOUT click")
         navHostController.popBackStack()
         navHostController.navigate(Graph.ROOT)
     }
@@ -69,7 +68,7 @@ fun MainScreen(navHostController: NavHostController) {
             contentAlignment = Alignment.Center
         ) {
             when {
-                userDetails?.userType == "ADMIN" -> AdminView(logoutClick)
+                userDetails?.userType == "ADMIN" -> AdminView(logoutClick, userDetails!!)
                 userDetails?.userType == "USER" -> UserView(logoutClick)
                 else -> CircularProgressIndicator()
                 }
@@ -87,13 +86,14 @@ fun MainScreen(navHostController: NavHostController) {
 
 
 @Composable
-fun AdminView(logoutClick: () -> Unit) {
+fun AdminView(logoutClick: () -> Unit, userDetails: UserDetailsResponse) {
     Column(
         modifier = Modifier
             .fillMaxSize()
     ) {
         TopBar(logoutClick)
         Text("Welcome, Admin!", style = MaterialTheme.typography.headlineMedium)
+        println(userDetails)
         // Add ADMIN specific content here
     }
 }
