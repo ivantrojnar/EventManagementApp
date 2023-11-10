@@ -37,6 +37,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import hr.itrojnar.eventmanagement.R
 import kotlinx.coroutines.launch
 
@@ -53,6 +54,7 @@ fun LoginRegisterScreen(
     val focusManager = LocalFocusManager.current
 
     val gradient = Brush.horizontalGradient(listOf(Color(0xFFCF753A), Color(0xFFB33161)))
+    val fadedGradient = Brush.horizontalGradient(listOf(Color(0xFFCF753A).copy(alpha = 0.5f), Color(0xFFB33161).copy(alpha = 0.5f)))
 
     Column(
         modifier = Modifier
@@ -113,12 +115,12 @@ fun LoginRegisterScreen(
             enabled = isButtonEnabled,
             modifier = Modifier
                 .fillMaxWidth()
-                .background((gradient), shape = RoundedCornerShape(10.dp))
-                .height(ButtonDefaults.MinHeight + 5.dp),
+                .background(if (isButtonEnabled) gradient else fadedGradient, shape = RoundedCornerShape(10.dp))
+                .height(ButtonDefaults.MinHeight + 7.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
             shape = RoundedCornerShape(10.dp),
         ) {
-            Text(stringResource(R.string.login), color = Color.White)
+            Text(stringResource(R.string.login), color = Color.White, fontSize = 16.sp)
         }
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -128,14 +130,13 @@ fun LoginRegisterScreen(
             enabled = username.isNotBlank() && password.length >= 4,
             modifier = Modifier
                 .fillMaxWidth()
-                .background((gradient), shape = RoundedCornerShape(10.dp))
-                .height(ButtonDefaults.MinHeight + 5.dp),
+                .background(if (isButtonEnabled) gradient else fadedGradient, shape = RoundedCornerShape(10.dp))
+                .height(ButtonDefaults.MinHeight + 7.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
             shape = RoundedCornerShape(10.dp)
         ) {
             Text(
-                stringResource(R.string.register), color = Color.White
-            )
+                stringResource(R.string.register), color = Color.White, fontSize = 16.sp)
         }
     }
 }

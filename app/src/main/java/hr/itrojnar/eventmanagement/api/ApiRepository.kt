@@ -1,13 +1,15 @@
 package hr.itrojnar.eventmanagement.api
 
 import hr.itrojnar.eventmanagement.model.EventDTO
+import hr.itrojnar.eventmanagement.model.LoginRequest
 import hr.itrojnar.eventmanagement.model.UserDetailsResponse
 
 class ApiRepository(private val apiService: ApiService) {
 
-    suspend fun getUserDetails(accessToken: String): UserDetailsResponse {
+    suspend fun getUserDetails(username: String, password: String, accessToken: String): UserDetailsResponse {
         val authHeader = "Bearer $accessToken"
-        return apiService.getUserDetails(authHeader)
+        val loginRequest = LoginRequest(username, password)
+        return apiService.getUserDetails(authHeader, loginRequest)
     }
 
     suspend fun getAllEvents(accessToken: String): List<EventDTO> {

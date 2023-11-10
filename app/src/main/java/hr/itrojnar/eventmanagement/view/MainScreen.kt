@@ -19,6 +19,7 @@ import hr.itrojnar.eventmanagement.api.RetrofitClient
 import hr.itrojnar.eventmanagement.model.EventDTO
 import hr.itrojnar.eventmanagement.model.UserDetailsResponse
 import hr.itrojnar.eventmanagement.utils.getAccessToken
+import hr.itrojnar.eventmanagement.utils.getUserInfo
 
 @Composable
 fun MainScreen(navHostController: NavHostController) {
@@ -26,6 +27,7 @@ fun MainScreen(navHostController: NavHostController) {
     val context = LocalContext.current
 
     val accessToken = getAccessToken(context)
+    val user = getUserInfo(context)
 
     val apiRepository = ApiRepository(RetrofitClient.apiService)
 
@@ -33,8 +35,8 @@ fun MainScreen(navHostController: NavHostController) {
     var userEvents by remember { mutableStateOf(emptyList<EventDTO>()) }
 
     LaunchedEffect(accessToken) {
-        //userDetails = apiRepository.getUserDetails(accessToken)
-        userEvents = apiRepository.getAllEvents(accessToken)
+        userDetails = apiRepository.getUserDetails(user.username, user.password, user.accessToken)
+        //userEvents = apiRepository.getAllEvents(accessToken)
     }
 
     // UI
@@ -43,7 +45,15 @@ fun MainScreen(navHostController: NavHostController) {
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            if (userEvents.isNotEmpty()) {
+            if (userDetails != null) {
+                println(userDetails)
+                // Display your content based on userDetails
+                // Example: Text(userDetails.username)
+            } else {
+                // Display loading indicator or placeholder
+                CircularProgressIndicator()
+            }
+            /*if (userEvents.isNotEmpty()) {
                 // Display your content based on userDetails
                 // Example: Text(userDetails.username)
                 for (event in userEvents) {
@@ -52,7 +62,7 @@ fun MainScreen(navHostController: NavHostController) {
             } else {
                 // Display loading indicator or placeholder
                 CircularProgressIndicator()
-            }
+            }*/
         }
     }
 }
