@@ -2,6 +2,7 @@ package hr.itrojnar.eventmanagement.view
 
 import android.Manifest
 import android.app.Activity
+import android.app.DatePickerDialog
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
@@ -58,6 +59,10 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.rememberImagePainter
+import com.vanpra.composematerialdialogs.MaterialDialog
+import com.vanpra.composematerialdialogs.datetime.date.DatePickerDefaults
+import com.vanpra.composematerialdialogs.datetime.date.datepicker
+import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import hr.itrojnar.eventmanagement.R
 import hr.itrojnar.eventmanagement.api.ApiRepository
 import hr.itrojnar.eventmanagement.api.RetrofitClient
@@ -226,7 +231,8 @@ fun AdminView(logoutClick: () -> Unit, userDetails: UserDetailsResponse, events:
                         modifier = Modifier
                             .fillMaxWidth()
                             .aspectRatio(1f)
-                            .background(Color.LightGray))
+                            .background(Color.LightGray)
+                    )
                     {
                         imageUri?.let { uri ->
                             val painter = rememberImagePainter(
@@ -242,7 +248,8 @@ fun AdminView(logoutClick: () -> Unit, userDetails: UserDetailsResponse, events:
                         IconButton(
                             onClick = {
                                 multiplePermissionResultLauncher.launch(permissionsToRequest)
-                                showImagePickerDialog = true },
+                                showImagePickerDialog = true
+                            },
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
                                 .padding(16.dp)
@@ -261,8 +268,30 @@ fun AdminView(logoutClick: () -> Unit, userDetails: UserDetailsResponse, events:
                                 )
                             }
                         }
-
                     }
+                    val datePickerDialogState = rememberMaterialDialogState()
+                    MaterialDialog(
+                        dialogState = datePickerDialogState,
+                        buttons = {
+                            positiveButton("Ok")
+                            negativeButton("Cancel")
+                        }
+                    ) {
+                        datepicker(
+                            colors = DatePickerDefaults.colors(
+                                headerBackgroundColor = Color(0xFFB33161),
+                                dateActiveBackgroundColor = Color(0xFFCF753A),
+                            )
+                        ) { date ->
+
+                        }
+                    }
+
+                    /* This should be called in an onClick or an Effect */
+                    Button(onClick = { datePickerDialogState.show() }) {
+                        Text(text = "Test")
+                    }
+
                 }
             }
             //AddEventForm()
@@ -377,7 +406,8 @@ fun AddEventForm() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(1f)
-                    .background(Color.LightGray))
+                    .background(Color.LightGray)
+            )
             {
             }
         }
