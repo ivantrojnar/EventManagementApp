@@ -138,6 +138,8 @@ fun AdminView(logoutClick: () -> Unit, userDetails: UserDetailsResponse, events:
 
     var isAddEventVisible by remember { mutableStateOf(false) }
     val gradient = Brush.horizontalGradient(listOf(Color(0xFFCF753A), Color(0xFFB33161)))
+    val fadedGradient = Brush.horizontalGradient(listOf(Color(0xFFCF753A).copy(alpha = 0.5f), Color(0xFFB33161).copy(alpha = 0.5f)))
+
     val context = LocalContext.current
     val activity = context.findActivity()
 
@@ -215,7 +217,8 @@ fun AdminView(logoutClick: () -> Unit, userDetails: UserDetailsResponse, events:
         TopBar(logoutClick)
         Button(
             onClick = { isAddEventVisible = !isAddEventVisible }, modifier = Modifier
-                .padding(start = 16.dp, top = 20.dp)
+                .fillMaxWidth()
+                .padding(start = 16.dp, top = 20.dp, end = 16.dp)
                 .background(gradient, shape = RoundedCornerShape(10.dp))
                 .height(ButtonDefaults.MinHeight + 7.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
@@ -478,6 +481,22 @@ fun AdminView(logoutClick: () -> Unit, userDetails: UserDetailsResponse, events:
                             .fillMaxWidth()
                             .padding(vertical = 8.dp, horizontal = 16.dp)
                     )
+
+                    Button(
+                        onClick = {
+                            eventViewModel.createEvent()
+                        },
+                        enabled = eventViewModel.isReadyToCreateEvent,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                            .background(if (eventViewModel.isReadyToCreateEvent) gradient else fadedGradient, shape = RoundedCornerShape(10.dp))
+                            .height(ButtonDefaults.MinHeight + 10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text("Create Event", fontSize = 15.sp, color = Color.White)
+                    }
                 }
             }
         }
