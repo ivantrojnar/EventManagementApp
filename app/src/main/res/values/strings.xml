@@ -5,4 +5,10 @@
     <string name="password">Password</string>
     <string name="register">Register</string>
     <string name="user_registered_successfully">User registered successfully</string>
+    <string name="toggle_add_new_event">Toggle Add New Event</string>
+    <string name="create_new_event">Create New Event</string>
+    <string name="choose_picture">Choose picture</string>
+    <string name="take_photo">Take photo</string>
+    <string name="select_from_gallery">Select from gallery</string>
+    <string name="cancel">Cancel</string>
 </resources>
