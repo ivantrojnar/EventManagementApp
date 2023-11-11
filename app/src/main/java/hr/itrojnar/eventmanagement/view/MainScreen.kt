@@ -30,6 +30,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
@@ -57,7 +59,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -79,6 +83,7 @@ import hr.itrojnar.eventmanagement.nav.Graph
 import hr.itrojnar.eventmanagement.utils.findActivity
 import hr.itrojnar.eventmanagement.utils.getAccessToken
 import hr.itrojnar.eventmanagement.utils.getUserInfo
+import hr.itrojnar.eventmanagement.viewmodel.EventViewModel
 import hr.itrojnar.eventmanagement.viewmodel.MainViewModel
 import java.io.ByteArrayOutputStream
 import java.time.LocalDate
@@ -135,10 +140,13 @@ fun AdminView(logoutClick: () -> Unit, userDetails: UserDetailsResponse, events:
     val context = LocalContext.current
     val activity = context.findActivity()
 
+    val focusManager = LocalFocusManager.current
+
     var showImagePickerDialog by remember { mutableStateOf(false) }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
 
     val viewModel = viewModel<MainViewModel>()
+    val eventViewModel: EventViewModel = viewModel<EventViewModel>()
     val dialogQueue = viewModel.visiblePermissionDialogQueue
     var showDialog by remember { mutableStateOf(false) }
 
@@ -214,12 +222,14 @@ fun AdminView(logoutClick: () -> Unit, userDetails: UserDetailsResponse, events:
         ) {
             Text(stringResource(R.string.toggle_add_new_event), fontSize = 15.sp)
         }
+        Spacer(modifier = Modifier.height(10.dp))
         AnimatedVisibility(visible = isAddEventVisible) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color.White)
                     .animateContentSize() // Animated size for dropdown effect
+                    .verticalScroll(rememberScrollState())
             ) {
 
                 Box(
@@ -235,7 +245,6 @@ fun AdminView(logoutClick: () -> Unit, userDetails: UserDetailsResponse, events:
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 20.dp)
-                        .verticalScroll(rememberScrollState())
                 ) {
 
                     Box(
@@ -318,6 +327,36 @@ fun AdminView(logoutClick: () -> Unit, userDetails: UserDetailsResponse, events:
                         }
                     }
 
+                    OutlinedTextField(
+                        value = eventViewModel.eventName.value,
+                        onValueChange = { eventViewModel.eventName.value = it },
+                        label = { Text(text = stringResource(R.string.event_title)) },
+                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+                        keyboardActions = KeyboardActions(
+                            onDone = { focusManager.clearFocus() }
+                        ),
+                        maxLines = 1,
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp, horizontal = 16.dp)
+                    )
+
+                    OutlinedTextField(
+                        value = eventViewModel.description.value,
+                        onValueChange = { eventViewModel.description.value = it },
+                        label = { Text(text = stringResource(R.string.event_description)) },
+                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+                        keyboardActions = KeyboardActions(
+                            onDone = { focusManager.clearFocus() }
+                        ),
+                        maxLines = 1,
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp, horizontal = 16.dp)
+                    )
+
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -329,6 +368,7 @@ fun AdminView(logoutClick: () -> Unit, userDetails: UserDetailsResponse, events:
                             value = selectedDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                             onValueChange = { /* Handle text input if needed */ },
                             readOnly = true,
+                            shape = RoundedCornerShape(10.dp),
                             label = { Text(stringResource(R.string.date)) },
                             modifier = Modifier
                                 .clickable {
@@ -364,6 +404,7 @@ fun AdminView(logoutClick: () -> Unit, userDetails: UserDetailsResponse, events:
                             value = selectedTime.format(DateTimeFormatter.ofPattern("HH:mm")),
                             onValueChange = { /* Handle text input if needed */ },
                             readOnly = true,
+                            shape = RoundedCornerShape(10.dp),
                             label = { Text(stringResource(R.string.time)) },
                             modifier = Modifier.weight(1f)
                         )
@@ -412,6 +453,7 @@ fun AdminView(logoutClick: () -> Unit, userDetails: UserDetailsResponse, events:
             }, onGoToAppSettingsClick = { openAppSettings(activity = activity) })
         }
         Text("Welcome, Admin!", style = MaterialTheme.typography.headlineMedium)
+        Spacer(modifier = Modifier.height(100.dp))
         // Add ADMIN specific content here
     }
 }
@@ -460,46 +502,6 @@ fun TopBar(logoutClick: () -> Unit) {
 
             IconButton(onClick = logoutClick) {
                 Icon(Icons.Filled.ExitToApp, contentDescription = null, tint = Color.White)
-            }
-        }
-    }
-}
-
-@Composable
-fun AddEventForm() {
-    // Your form layout goes here, with fields for picture, event name, address, etc.
-    // You can use standard Compose UI components like TextField, DatePicker, TimePicker, etc.
-    // Wrap the entire form in an animated modifier for the dropdown effect.
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White)
-            .animateContentSize() // Animated size for dropdown effect
-    ) {
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            contentAlignment = Alignment.TopCenter
-        ) {
-            Text(text = stringResource(R.string.create_new_event), fontSize = 16.sp)
-        }
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 20.dp)
-                .verticalScroll(rememberScrollState())
-        ) {
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(1f)
-                    .background(Color.LightGray)
-            )
-            {
             }
         }
     }
