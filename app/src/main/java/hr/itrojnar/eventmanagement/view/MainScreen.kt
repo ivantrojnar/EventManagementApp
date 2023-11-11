@@ -62,6 +62,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -318,11 +319,13 @@ fun AdminView(logoutClick: () -> Unit, userDetails: UserDetailsResponse, events:
                             negativeButton("Cancel")
                         }
                     ) {
-                        timepicker(colors = TimePickerDefaults.colors(
-                            activeBackgroundColor = Color(0xFFB33161),
-                            selectorColor = Color(0xFFB33161)
+                        timepicker(
+                            colors = TimePickerDefaults.colors(
+                                activeBackgroundColor = Color(0xFFB33161),
+                                selectorColor = Color(0xFFB33161)
 
-                        )) { time ->
+                            )
+                        ) { time ->
                             selectedTime = time
                         }
                     }
@@ -424,9 +427,59 @@ fun AdminView(logoutClick: () -> Unit, userDetails: UserDetailsResponse, events:
                             Text(stringResource(R.string.select_time), fontSize = 15.sp)
                         }
                     }
+
+                    OutlinedTextField(
+                        value = eventViewModel.address.value,
+                        onValueChange = { eventViewModel.address.value = it },
+                        label = { Text(text = stringResource(R.string.event_address)) },
+                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+                        keyboardActions = KeyboardActions(
+                            onDone = { focusManager.clearFocus() }
+                        ),
+                        maxLines = 1,
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp, horizontal = 16.dp)
+                    )
+
+                    OutlinedTextField(
+                        value = eventViewModel.maxAttendees.value,
+                        onValueChange = { eventViewModel.maxAttendees.value = it },
+                        label = { Text(text = stringResource(R.string.maximum_number_of_attendees)) },
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Next,
+                            keyboardType = KeyboardType.Number
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = { focusManager.clearFocus() }
+                        ),
+                        maxLines = 1,
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp, horizontal = 16.dp)
+                    )
+
+                    OutlinedTextField(
+                        value = eventViewModel.price.value,
+                        onValueChange = { eventViewModel.price.value = it },
+                        label = { Text(text = stringResource(R.string.ticket_price)) },
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Done,
+                            keyboardType = KeyboardType.Number
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = { focusManager.clearFocus() }
+                        ),
+                        maxLines = 1,
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp, horizontal = 16.dp)
+                    )
                 }
             }
-            //AddEventForm()
         }
         dialogQueue.reversed().forEach { permission ->
             PermissionDialog(permissionTextProvider = when (permission) {
