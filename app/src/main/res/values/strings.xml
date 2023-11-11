@@ -24,4 +24,7 @@
     <string name="this_app_needs_access_to_your_camera_so_that_you_can_take_pictures_while_using_the_app">This app needs access to your camera so that you can take pictures while using the app.</string>
     <string name="it_seems_you_permanently_declined_microphone_permission">It seems you permanently declined microphone permission.</string>
     <string name="this_app_needs_access_to_your_microphone_so_that_your_friends_can_hear_you">This app needs access to your microphone so that your friends can hear you.</string>
+    <string name="date">Date</string>
+    <string name="time">Time</string>
+    <string name="select_time">Select Time</string>
 </resources>

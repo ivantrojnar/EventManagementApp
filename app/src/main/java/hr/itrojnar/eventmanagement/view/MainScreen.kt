@@ -15,16 +15,19 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -35,9 +38,11 @@ import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -62,6 +67,8 @@ import coil.compose.rememberImagePainter
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.date.DatePickerDefaults
 import com.vanpra.composematerialdialogs.datetime.date.datepicker
+import com.vanpra.composematerialdialogs.datetime.time.TimePickerDefaults
+import com.vanpra.composematerialdialogs.datetime.time.timepicker
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import hr.itrojnar.eventmanagement.R
 import hr.itrojnar.eventmanagement.api.ApiRepository
@@ -74,6 +81,9 @@ import hr.itrojnar.eventmanagement.utils.getAccessToken
 import hr.itrojnar.eventmanagement.utils.getUserInfo
 import hr.itrojnar.eventmanagement.viewmodel.MainViewModel
 import java.io.ByteArrayOutputStream
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun MainScreen(navHostController: NavHostController) {
@@ -116,6 +126,7 @@ fun MainScreen(navHostController: NavHostController) {
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminView(logoutClick: () -> Unit, userDetails: UserDetailsResponse, events: List<EventDTO>) {
 
@@ -270,6 +281,10 @@ fun AdminView(logoutClick: () -> Unit, userDetails: UserDetailsResponse, events:
                         }
                     }
                     val datePickerDialogState = rememberMaterialDialogState()
+                    val timePickerDialogState = rememberMaterialDialogState()
+                    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+                    var selectedTime by remember { mutableStateOf(LocalTime.now()) }
+
                     MaterialDialog(
                         dialogState = datePickerDialogState,
                         buttons = {
@@ -283,15 +298,91 @@ fun AdminView(logoutClick: () -> Unit, userDetails: UserDetailsResponse, events:
                                 dateActiveBackgroundColor = Color(0xFFCF753A),
                             )
                         ) { date ->
-
+                            selectedDate = date
                         }
                     }
 
-                    /* This should be called in an onClick or an Effect */
-                    Button(onClick = { datePickerDialogState.show() }) {
-                        Text(text = "Test")
+                    MaterialDialog(
+                        dialogState = timePickerDialogState,
+                        buttons = {
+                            positiveButton("Ok")
+                            negativeButton("Cancel")
+                        }
+                    ) {
+                        timepicker(colors = TimePickerDefaults.colors(
+                            activeBackgroundColor = Color(0xFFB33161),
+                            selectorColor = Color(0xFFB33161)
+
+                        )) { time ->
+                            selectedTime = time
+                        }
                     }
 
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedTextField(
+                            value = selectedDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                            onValueChange = { /* Handle text input if needed */ },
+                            readOnly = true,
+                            label = { Text(stringResource(R.string.date)) },
+                            modifier = Modifier
+                                .clickable {
+                                    datePickerDialogState.show()
+                                }
+                                .weight(1f)
+                        )
+
+                        Spacer(modifier = Modifier.width(20.dp))
+
+                        Button(
+                            onClick = {
+                                datePickerDialogState.show()
+                            },
+                            modifier = Modifier
+                                .background(gradient, shape = RoundedCornerShape(10.dp))
+                                .height(ButtonDefaults.MinHeight + 10.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Text("Select Date", fontSize = 15.sp)
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedTextField(
+                            value = selectedTime.format(DateTimeFormatter.ofPattern("HH:mm")),
+                            onValueChange = { /* Handle text input if needed */ },
+                            readOnly = true,
+                            label = { Text(stringResource(R.string.time)) },
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        Spacer(modifier = Modifier.width(20.dp))
+
+                        Button(
+                            onClick = {
+                                timePickerDialogState.show()
+                            },
+                            modifier = Modifier
+                                .background(gradient, shape = RoundedCornerShape(10.dp))
+                                .height(ButtonDefaults.MinHeight + 10.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Text(stringResource(R.string.select_time), fontSize = 15.sp)
+                        }
+                    }
                 }
             }
             //AddEventForm()
