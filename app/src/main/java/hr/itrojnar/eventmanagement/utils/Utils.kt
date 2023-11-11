@@ -1,6 +1,8 @@
 package hr.itrojnar.eventmanagement.utils
 
+import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
 import android.content.SharedPreferences
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -65,4 +67,15 @@ fun getUserInfo(context: Context): UserAuthDetails {
 fun getAccessToken(context: Context): String {
     val sharedPreferences: SharedPreferences = context.getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
     return sharedPreferences.getString("accessToken", "") ?: ""
+}
+
+fun Context.findActivity(): Activity? {
+    var currentContext = this
+    while (currentContext is ContextWrapper) {
+        if (currentContext is Activity) {
+            return currentContext
+        }
+        currentContext = currentContext.baseContext
+    }
+    return null
 }

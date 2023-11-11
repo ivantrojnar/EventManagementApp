@@ -1,20 +1,24 @@
 package hr.itrojnar.eventmanagement.view
 
+import android.Manifest
+import android.app.Activity
+import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
+import android.os.Build
 import android.provider.MediaStore
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,11 +28,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -43,22 +49,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import coil.compose.rememberImagePainter
 import hr.itrojnar.eventmanagement.R
 import hr.itrojnar.eventmanagement.api.ApiRepository
 import hr.itrojnar.eventmanagement.api.RetrofitClient
 import hr.itrojnar.eventmanagement.model.EventDTO
 import hr.itrojnar.eventmanagement.model.UserDetailsResponse
 import hr.itrojnar.eventmanagement.nav.Graph
+import hr.itrojnar.eventmanagement.utils.findActivity
 import hr.itrojnar.eventmanagement.utils.getAccessToken
 import hr.itrojnar.eventmanagement.utils.getUserInfo
+import hr.itrojnar.eventmanagement.viewmodel.MainViewModel
 import java.io.ByteArrayOutputStream
 
 @Composable
@@ -108,10 +117,36 @@ fun AdminView(logoutClick: () -> Unit, userDetails: UserDetailsResponse, events:
     var isAddEventVisible by remember { mutableStateOf(false) }
     val gradient = Brush.horizontalGradient(listOf(Color(0xFFCF753A), Color(0xFFB33161)))
     val context = LocalContext.current
+    val activity = context.findActivity()
 
     var showImagePickerDialog by remember { mutableStateOf(false) }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
 
+    val viewModel = viewModel<MainViewModel>()
+    val dialogQueue = viewModel.visiblePermissionDialogQueue
+    var showDialog by remember { mutableStateOf(false) }
+
+    val commonPermissions = listOf(
+        Manifest.permission.CAMERA,
+        Manifest.permission.RECORD_AUDIO,
+        Manifest.permission.CALL_PHONE
+    )
+
+    val permissionsToRequest = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        (listOf(Manifest.permission.READ_MEDIA_IMAGES) + commonPermissions).toTypedArray()
+    } else {
+        (listOf(Manifest.permission.READ_EXTERNAL_STORAGE) + commonPermissions).toTypedArray()
+    }
+
+    val multiplePermissionResultLauncher =
+        rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestMultiplePermissions(),
+            onResult = { permissions ->
+                permissionsToRequest.forEach { permission ->
+                    viewModel.onPermissionResult(
+                        permission = permission, isGranted = permissions[permission] == true
+                    )
+                }
+            })
 
     val takePictureLauncher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.TakePicturePreview()) { bitmap: Bitmap? ->
@@ -153,7 +188,6 @@ fun AdminView(logoutClick: () -> Unit, userDetails: UserDetailsResponse, events:
             .fillMaxSize()
     ) {
         TopBar(logoutClick)
-        // Add Event Button
         Button(
             onClick = { isAddEventVisible = !isAddEventVisible }, modifier = Modifier
                 .padding(start = 16.dp, top = 20.dp)
@@ -165,7 +199,97 @@ fun AdminView(logoutClick: () -> Unit, userDetails: UserDetailsResponse, events:
             Text(stringResource(R.string.toggle_add_new_event), fontSize = 15.sp)
         }
         AnimatedVisibility(visible = isAddEventVisible) {
-            AddEventForm()
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.White)
+                    .animateContentSize() // Animated size for dropdown effect
+            ) {
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.TopCenter
+                ) {
+                    Text(text = stringResource(R.string.create_new_event), fontSize = 16.sp)
+                }
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 20.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(1f)
+                            .background(Color.LightGray))
+                    {
+                        imageUri?.let { uri ->
+                            val painter = rememberImagePainter(
+                                data = uri,
+                            )
+                            Image(
+                                painter = painter,
+                                contentDescription = stringResource(R.string.selected_preview),
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                        IconButton(
+                            onClick = {
+                                multiplePermissionResultLauncher.launch(permissionsToRequest)
+                                showImagePickerDialog = true },
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(16.dp)
+                        ) {
+                            if (imageUri != null) {
+                                Icon(
+                                    Icons.Default.Edit,
+                                    contentDescription = stringResource(R.string.edit),
+                                    modifier = Modifier.size(36.dp)
+                                )
+                            } else {
+                                Icon(
+                                    Icons.Default.AddCircle,
+                                    contentDescription = stringResource(R.string.camera),
+                                    modifier = Modifier.size(36.dp)
+                                )
+                            }
+                        }
+
+                    }
+                }
+            }
+            //AddEventForm()
+        }
+        dialogQueue.reversed().forEach { permission ->
+            PermissionDialog(permissionTextProvider = when (permission) {
+                Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_EXTERNAL_STORAGE -> {
+                    MediaImagesPermissionTextProvider(context)
+                }
+
+                Manifest.permission.CAMERA -> {
+                    CameraPermissionTextProvider(context)
+                }
+
+                Manifest.permission.RECORD_AUDIO -> {
+                    RecordAudioPermissionTextProvider(context)
+                }
+
+                else -> return@forEach
+            }, isPermanentlyDeclined = !activity!!.shouldShowRequestPermissionRationale(
+                permission
+            ), onDismiss = viewModel::dismissDialog, onOkClick = {
+                viewModel.dismissDialog()
+                multiplePermissionResultLauncher.launch(
+                    arrayOf(permission)
+                )
+            }, onGoToAppSettingsClick = { openAppSettings(activity = activity) })
         }
         Text("Welcome, Admin!", style = MaterialTheme.typography.headlineMedium)
         // Add ADMIN specific content here
@@ -254,6 +378,15 @@ fun AddEventForm() {
                     .fillMaxWidth()
                     .aspectRatio(1f)
                     .background(Color.LightGray))
+            {
+            }
         }
     }
+}
+
+fun openAppSettings(activity: Activity) {
+    Intent(
+        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+        Uri.fromParts("package", activity.packageName, null)
+    ).also { activity.startActivity(it) }
 }
