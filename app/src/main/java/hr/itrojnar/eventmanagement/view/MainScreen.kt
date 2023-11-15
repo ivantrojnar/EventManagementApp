@@ -84,6 +84,8 @@ import hr.itrojnar.eventmanagement.model.CreateEventDTO
 import hr.itrojnar.eventmanagement.model.EventDTO
 import hr.itrojnar.eventmanagement.model.UserDetailsResponse
 import hr.itrojnar.eventmanagement.nav.Graph
+import hr.itrojnar.eventmanagement.utils.cleanBase64String
+import hr.itrojnar.eventmanagement.utils.convertImageUriToBase64
 import hr.itrojnar.eventmanagement.utils.findActivity
 import hr.itrojnar.eventmanagement.utils.getAccessToken
 import hr.itrojnar.eventmanagement.utils.getUserInfo
@@ -204,7 +206,10 @@ fun AdminView(
                 )
                 imageUri = Uri.parse(path)
                 imageUri?.let { uri ->
-                    //viewModel.setImageUri(uri)
+                    runBlocking {
+                        val imageBase64 = convertImageUriToBase64(context, uri)
+                        eventViewModel.imageUri.value = cleanBase64String(imageBase64)
+                    }
                 }
             }
         }
@@ -212,7 +217,10 @@ fun AdminView(
     val pickImageLauncher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri: Uri? ->
             imageUri = uri
-            //viewModel.setImageUri(uri)
+            runBlocking {
+                val imageBase64 = convertImageUriToBase64(context, imageUri!!)
+                eventViewModel.imageUri.value = cleanBase64String(imageBase64)
+            }
         }
 
     if (showImagePickerDialog) {
@@ -415,7 +423,7 @@ fun AdminView(
                             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                             shape = RoundedCornerShape(10.dp)
                         ) {
-                            Text("Select Date", fontSize = 15.sp)
+                            Text(stringResource(R.string.select_date), fontSize = 15.sp)
                         }
                     }
 
@@ -507,7 +515,7 @@ fun AdminView(
                             runBlocking {
                                 val newEvent =
                                     CreateEventDTO(
-                                        "",
+                                        eventViewModel.imageUri.value,
                                         eventViewModel.eventName.value,
                                         eventViewModel.maxAttendees.value.toInt(),
                                         0,
@@ -522,10 +530,11 @@ fun AdminView(
                                 )
 
                                 events.add(result)
+                                println("Image base 64: " + eventViewModel.imageUri.value)
+                                println("Image base 64 from REST API: " + result.picture)
                             }
                         },
-                        //enabled = eventViewModel.isReadyToCreateEvent,
-                        enabled = true,
+                        enabled = eventViewModel.isReadyToCreateEvent,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(16.dp)

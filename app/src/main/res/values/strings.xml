@@ -32,4 +32,5 @@
     <string name="event_address">Event Address</string>
     <string name="maximum_number_of_attendees">Maximum number of attendees</string>
     <string name="ticket_price">Ticket Price</string>
+    <string name="select_date">Select Date</string>
 </resources>

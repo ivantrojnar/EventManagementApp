@@ -4,6 +4,10 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.SharedPreferences
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.util.Base64
 import android.widget.TimePicker
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -16,7 +20,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import com.bumptech.glide.Glide
 import hr.itrojnar.eventmanagement.model.UserAuthDetails
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
 
 @Composable
 fun GradientButton(
@@ -78,4 +87,27 @@ fun Context.findActivity(): Activity? {
         currentContext = currentContext.baseContext
     }
     return null
+}
+
+fun cleanBase64String(base64String: String): String {
+    return base64String.replace("\n", "")
+}
+
+// Function to convert image URI to Base64 string
+suspend fun convertImageUriToBase64(context: Context, imageUri: Uri): String {
+    return withContext(Dispatchers.IO) {
+        try {
+            val inputStream: InputStream? = context.contentResolver.openInputStream(imageUri)
+            inputStream?.use { input ->
+                val bitmap: Bitmap = BitmapFactory.decodeStream(input)
+                val byteArrayOutputStream = ByteArrayOutputStream()
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
+                val byteArray: ByteArray = byteArrayOutputStream.toByteArray()
+                return@withContext android.util.Base64.encodeToString(byteArray, android.util.Base64.DEFAULT)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return@withContext ""
+    }
 }
