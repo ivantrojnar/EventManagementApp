@@ -1,5 +1,6 @@
 package hr.itrojnar.eventmanagement.api
 
+import hr.itrojnar.eventmanagement.model.CreateEventDTO
 import hr.itrojnar.eventmanagement.model.EventDTO
 import hr.itrojnar.eventmanagement.model.LoginRequest
 import hr.itrojnar.eventmanagement.model.UserDetailsResponse
@@ -15,4 +16,7 @@ interface ApiService {
 
     @GET("/events/all")
     suspend fun getAllEvents(@Header("Authorization") authorization: String): List<EventDTO>
+
+    @POST("/events/create")
+    suspend fun createEvent(@Header("Authorization") authorization: String, @Body event: CreateEventDTO): EventDTO
 }

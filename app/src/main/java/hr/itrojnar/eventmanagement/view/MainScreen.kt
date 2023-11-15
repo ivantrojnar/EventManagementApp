@@ -1,8 +1,8 @@
 package hr.itrojnar.eventmanagement.view
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
-import android.app.DatePickerDialog
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
@@ -28,6 +28,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -78,6 +80,7 @@ import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import hr.itrojnar.eventmanagement.R
 import hr.itrojnar.eventmanagement.api.ApiRepository
 import hr.itrojnar.eventmanagement.api.RetrofitClient
+import hr.itrojnar.eventmanagement.model.CreateEventDTO
 import hr.itrojnar.eventmanagement.model.EventDTO
 import hr.itrojnar.eventmanagement.model.UserDetailsResponse
 import hr.itrojnar.eventmanagement.nav.Graph
@@ -86,6 +89,7 @@ import hr.itrojnar.eventmanagement.utils.getAccessToken
 import hr.itrojnar.eventmanagement.utils.getUserInfo
 import hr.itrojnar.eventmanagement.viewmodel.EventViewModel
 import hr.itrojnar.eventmanagement.viewmodel.MainViewModel
+import kotlinx.coroutines.runBlocking
 import java.io.ByteArrayOutputStream
 import java.time.LocalDate
 import java.time.LocalTime
@@ -99,7 +103,7 @@ fun MainScreen(navHostController: NavHostController) {
     val user = getUserInfo(context)
     val apiRepository = ApiRepository(RetrofitClient.apiService)
     var userDetails by remember { mutableStateOf<UserDetailsResponse?>(null) }
-    var userEvents by remember { mutableStateOf(emptyList<EventDTO>()) }
+    val allEvents by remember { mutableStateOf(mutableListOf<EventDTO>()) }
 
     val logoutClick: () -> Unit = {
         navHostController.popBackStack()
@@ -108,7 +112,8 @@ fun MainScreen(navHostController: NavHostController) {
 
     LaunchedEffect(accessToken) {
         userDetails = apiRepository.getUserDetails(user.username, user.password, user.accessToken)
-        userEvents = apiRepository.getAllEvents(accessToken)
+        //allEvents = apiRepository.getAllEvents(accessToken).toMutableList()
+        allEvents.addAll(apiRepository.getAllEvents(accessToken))
     }
 
     // UI
@@ -121,7 +126,9 @@ fun MainScreen(navHostController: NavHostController) {
                 userDetails?.userType == "ADMIN" -> AdminView(
                     logoutClick,
                     userDetails!!,
-                    userEvents!!
+                    allEvents,
+                    apiRepository,
+                    accessToken
                 )
 
                 userDetails?.userType == "USER" -> UserView(logoutClick)
@@ -132,13 +139,25 @@ fun MainScreen(navHostController: NavHostController) {
 }
 
 
+@SuppressLint("UnrememberedMutableState")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdminView(logoutClick: () -> Unit, userDetails: UserDetailsResponse, events: List<EventDTO>) {
+fun AdminView(
+    logoutClick: () -> Unit,
+    userDetails: UserDetailsResponse,
+    events: MutableList<EventDTO>,
+    apiRepository: ApiRepository,
+    accessToken: String
+) {
 
     var isAddEventVisible by remember { mutableStateOf(false) }
     val gradient = Brush.horizontalGradient(listOf(Color(0xFFCF753A), Color(0xFFB33161)))
-    val fadedGradient = Brush.horizontalGradient(listOf(Color(0xFFCF753A).copy(alpha = 0.5f), Color(0xFFB33161).copy(alpha = 0.5f)))
+    val fadedGradient = Brush.horizontalGradient(
+        listOf(
+            Color(0xFFCF753A).copy(alpha = 0.5f),
+            Color(0xFFB33161).copy(alpha = 0.5f)
+        )
+    )
 
     val context = LocalContext.current
     val activity = context.findActivity()
@@ -301,8 +320,8 @@ fun AdminView(logoutClick: () -> Unit, userDetails: UserDetailsResponse, events:
                     MaterialDialog(
                         dialogState = datePickerDialogState,
                         buttons = {
-                            positiveButton("Ok")
-                            negativeButton("Cancel")
+                            positiveButton(stringResource(id = R.string.ok))
+                            negativeButton(stringResource(id = R.string.cancel))
                         }
                     ) {
                         datepicker(
@@ -312,14 +331,15 @@ fun AdminView(logoutClick: () -> Unit, userDetails: UserDetailsResponse, events:
                             )
                         ) { date ->
                             selectedDate = date
+                            eventViewModel.date.value = date.toString()
                         }
                     }
 
                     MaterialDialog(
                         dialogState = timePickerDialogState,
                         buttons = {
-                            positiveButton("Ok")
-                            negativeButton("Cancel")
+                            positiveButton(stringResource(id = R.string.ok))
+                            negativeButton(stringResource(id = R.string.cancel))
                         }
                     ) {
                         timepicker(
@@ -484,13 +504,35 @@ fun AdminView(logoutClick: () -> Unit, userDetails: UserDetailsResponse, events:
 
                     Button(
                         onClick = {
-                            eventViewModel.createEvent()
+                            runBlocking {
+                                val newEvent =
+                                    CreateEventDTO(
+                                        "",
+                                        eventViewModel.eventName.value,
+                                        eventViewModel.maxAttendees.value.toInt(),
+                                        0,
+                                        eventViewModel.address.value,
+                                        eventViewModel.description.value,
+                                        eventViewModel.date.value,
+                                        eventViewModel.price.value.toBigDecimal()
+                                    )
+                                val result = apiRepository.createEvent(
+                                    accessToken,
+                                    newEvent
+                                )
+
+                                events.add(result)
+                            }
                         },
-                        enabled = eventViewModel.isReadyToCreateEvent,
+                        //enabled = eventViewModel.isReadyToCreateEvent,
+                        enabled = true,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(16.dp)
-                            .background(if (eventViewModel.isReadyToCreateEvent) gradient else fadedGradient, shape = RoundedCornerShape(10.dp))
+                            .background(
+                                if (eventViewModel.isReadyToCreateEvent) gradient else fadedGradient,
+                                shape = RoundedCornerShape(10.dp)
+                            )
                             .height(ButtonDefaults.MinHeight + 10.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                         shape = RoundedCornerShape(10.dp)
@@ -524,7 +566,21 @@ fun AdminView(logoutClick: () -> Unit, userDetails: UserDetailsResponse, events:
                 )
             }, onGoToAppSettingsClick = { openAppSettings(activity = activity) })
         }
-        Text("Welcome, Admin!", style = MaterialTheme.typography.headlineMedium)
+        Text(
+            "Welcome, Admin!",
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(start = 16.dp)
+        )
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            itemsIndexed(items = events) { index, event ->
+                EventItem(event = event)
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
         Spacer(modifier = Modifier.height(100.dp))
         // Add ADMIN specific content here
     }
