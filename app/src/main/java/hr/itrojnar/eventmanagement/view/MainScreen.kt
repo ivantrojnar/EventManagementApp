@@ -238,6 +238,8 @@ fun AdminView(
         )
     }
 
+    var eventsState by remember { mutableStateOf(events) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -537,7 +539,8 @@ fun AdminView(
                                     newEvent
                                 )
 
-                                events.add(result)
+                                eventsState.add(result)
+                                //events.add(result)
                             }
                         },
                         enabled = eventViewModel.isReadyToCreateEvent,
@@ -582,7 +585,7 @@ fun AdminView(
             }, onGoToAppSettingsClick = { openAppSettings(activity = activity) })
         }
         Text(
-            "Welcome, Admin!",
+            stringResource(R.string.events),
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(start = 16.dp)
         )
@@ -591,8 +594,19 @@ fun AdminView(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            itemsIndexed(items = events) { index, event ->
-                EventItem(event = event)
+            itemsIndexed(items = eventsState) { index, event ->
+                EventItem(event = event, onDeleteClick = { eventId ->
+                    try {
+                        runBlocking {
+                            apiRepository.deleteEvent(accessToken, eventId)
+                            eventsState = eventsState.toMutableList().apply { removeIf { it.id == eventId } }
+                            println("TEST DELETE")
+                        }
+                    } catch (e: Exception) {
+                        //Handle error
+                        println(e)
+                    }
+                })
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }

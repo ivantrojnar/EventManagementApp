@@ -22,4 +22,9 @@ class ApiRepository(private val apiService: ApiService) {
         val authHeader = "Bearer $accessToken"
         return apiService.createEvent(authHeader, createEventDTO)
     }
+
+    suspend fun deleteEvent(accessToken: String, eventId: Long) {
+        val authHeader = "Bearer $accessToken"
+        apiService.deleteEvent(authHeader, eventId)
+    }
 }

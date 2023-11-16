@@ -51,7 +51,7 @@ import hr.itrojnar.eventmanagement.model.EventDTO
 import hr.itrojnar.eventmanagement.utils.formatDateAndTime
 
 @Composable
-fun EventItem(event: EventDTO) {
+fun EventItem(event: EventDTO, onDeleteClick: (Long) -> Unit) {
 
     val gradient = Brush.horizontalGradient(listOf(Color(0xFFCF753A), Color(0xFFB33161)))
     var showDialog by remember { mutableStateOf(false) }
@@ -142,7 +142,7 @@ fun EventItem(event: EventDTO) {
                     confirmButton = {
                         Button(
                             onClick = {
-                                // Handle delete action
+                                onDeleteClick(event.id)
                                 showDialog = false
                             }
                         ) {
