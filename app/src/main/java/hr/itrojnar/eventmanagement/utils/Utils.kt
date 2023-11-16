@@ -26,6 +26,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 
 @Composable
 fun GradientButton(
@@ -110,4 +113,29 @@ suspend fun convertImageUriToBase64(context: Context, imageUri: Uri): String {
         }
         return@withContext ""
     }
+}
+
+fun formatDateAndTime(dateString: String): Pair<String, String>? {
+    val patterns = listOf("yyyy-MM-dd'T'HH:mm:ss.SSSSSS", "yyyy-MM-dd'T'HH:mm:ss")
+
+    for (pattern in patterns) {
+        try {
+            val formatter = DateTimeFormatter.ofPattern(pattern)
+            val localDateTime = LocalDateTime.parse(dateString, formatter)
+
+            // Format date and time
+            val dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
+            val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+
+            val formattedDate = localDateTime.format(dateFormatter)
+            val formattedTime = localDateTime.format(timeFormatter)
+
+            return Pair(formattedDate, formattedTime)
+        } catch (e: DateTimeParseException) {
+            // Parsing failed with this pattern, try the next one
+        }
+    }
+
+    // Parsing failed with all patterns
+    return null
 }

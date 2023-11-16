@@ -94,6 +94,7 @@ import hr.itrojnar.eventmanagement.viewmodel.MainViewModel
 import kotlinx.coroutines.runBlocking
 import java.io.ByteArrayOutputStream
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
@@ -513,6 +514,13 @@ fun AdminView(
                     Button(
                         onClick = {
                             runBlocking {
+                                println(selectedDate)
+                                println(selectedTime)
+                                val dateTimeString = "$selectedDate" + "T" + "$selectedTime:00.000000"
+                                val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
+                                val localDateTime = LocalDateTime.parse(dateTimeString, formatter)
+                                eventViewModel.date.value = localDateTime.toString()
+
                                 val newEvent =
                                     CreateEventDTO(
                                         eventViewModel.imageUri.value,
@@ -530,8 +538,6 @@ fun AdminView(
                                 )
 
                                 events.add(result)
-                                println("Image base 64: " + eventViewModel.imageUri.value)
-                                println("Image base 64 from REST API: " + result.picture)
                             }
                         },
                         enabled = eventViewModel.isReadyToCreateEvent,
