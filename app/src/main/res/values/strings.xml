@@ -33,4 +33,11 @@
     <string name="maximum_number_of_attendees">Maximum number of attendees</string>
     <string name="ticket_price">Ticket Price</string>
     <string name="select_date">Select Date</string>
+    <string name="date_event">Date:</string>
+    <string name="time_event">Time:</string>
+    <string name="price">Price:</string>
+    <string name="max_attendees">Max Attendees:</string>
+    <string name="attendees">Attendees:</string>
+    <string name="delete">Delete</string>
+    <string name="are_you_sure_you_want_to_delete_this_event">Are you sure you want to delete this event?</string>
 </resources>
