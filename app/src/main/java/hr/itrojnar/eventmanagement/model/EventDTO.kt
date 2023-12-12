@@ -1,7 +1,6 @@
 package hr.itrojnar.eventmanagement.model
 
 import java.math.BigDecimal
-import java.time.LocalDate
 
 data class EventDTO(
     val id: Long,

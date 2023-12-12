@@ -3,10 +3,12 @@ package hr.itrojnar.eventmanagement.utils
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.provider.Settings
 import android.util.Base64
 import android.widget.TimePicker
 import androidx.compose.foundation.background
@@ -138,4 +140,11 @@ fun formatDateAndTime(dateString: String): Pair<String, String>? {
 
     // Parsing failed with all patterns
     return null
+}
+
+fun openAppSettings(activity: Activity) {
+    Intent(
+        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+        Uri.fromParts("package", activity.packageName, null)
+    ).also { activity.startActivity(it) }
 }

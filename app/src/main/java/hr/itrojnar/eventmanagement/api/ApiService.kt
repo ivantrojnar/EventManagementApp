@@ -20,6 +20,9 @@ interface ApiService {
     @GET("/events/all")
     suspend fun getAllEvents(@Header("Authorization") authorization: String): List<EventDTO>
 
+    @GET("/events/{eventId}")
+    suspend fun getEvent(@Header("Authorization") authorization: String, @Path("eventId") eventId: Long): EventDTO
+
     @POST("/events/create")
     suspend fun createEvent(@Header("Authorization") authorization: String, @Body event: CreateEventDTO): EventDTO
 

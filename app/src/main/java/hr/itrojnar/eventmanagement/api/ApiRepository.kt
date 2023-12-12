@@ -18,6 +18,11 @@ class ApiRepository(private val apiService: ApiService) {
         return apiService.getAllEvents(authHeader)
     }
 
+    suspend fun getEvent(accessToken: String, eventId: Long): EventDTO {
+        val authHeader = "Bearer $accessToken"
+        return apiService.getEvent(authHeader, eventId)
+    }
+
     suspend fun createEvent(accessToken: String, createEventDTO: CreateEventDTO): EventDTO {
         val authHeader = "Bearer $accessToken"
         return apiService.createEvent(authHeader, createEventDTO)

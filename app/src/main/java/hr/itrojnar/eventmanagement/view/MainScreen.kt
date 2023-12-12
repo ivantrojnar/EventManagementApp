@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.provider.Settings
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -84,11 +85,13 @@ import hr.itrojnar.eventmanagement.model.CreateEventDTO
 import hr.itrojnar.eventmanagement.model.EventDTO
 import hr.itrojnar.eventmanagement.model.UserDetailsResponse
 import hr.itrojnar.eventmanagement.nav.Graph
+import hr.itrojnar.eventmanagement.nav.Screen
 import hr.itrojnar.eventmanagement.utils.cleanBase64String
 import hr.itrojnar.eventmanagement.utils.convertImageUriToBase64
 import hr.itrojnar.eventmanagement.utils.findActivity
 import hr.itrojnar.eventmanagement.utils.getAccessToken
 import hr.itrojnar.eventmanagement.utils.getUserInfo
+import hr.itrojnar.eventmanagement.utils.openAppSettings
 import hr.itrojnar.eventmanagement.viewmodel.EventViewModel
 import hr.itrojnar.eventmanagement.viewmodel.MainViewModel
 import kotlinx.coroutines.runBlocking
@@ -125,22 +128,21 @@ fun MainScreen(navHostController: NavHostController) {
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            when {
-                userDetails?.userType == "ADMIN" -> AdminView(
+            when (userDetails?.userType) {
+                "ADMIN" -> AdminView(
                     logoutClick,
                     userDetails!!,
                     allEvents,
                     apiRepository,
-                    accessToken
+                    accessToken,
+                    navHostController
                 )
-
-                userDetails?.userType == "USER" -> UserView(logoutClick)
+                "USER" -> UserView(logoutClick)
                 else -> CircularProgressIndicator()
             }
         }
     }
 }
-
 
 @SuppressLint("UnrememberedMutableState")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -150,7 +152,8 @@ fun AdminView(
     userDetails: UserDetailsResponse,
     events: MutableList<EventDTO>,
     apiRepository: ApiRepository,
-    accessToken: String
+    accessToken: String,
+    navHostController: NavHostController
 ) {
 
     var isAddEventVisible by remember { mutableStateOf(false) }
@@ -600,18 +603,21 @@ fun AdminView(
                         runBlocking {
                             apiRepository.deleteEvent(accessToken, eventId)
                             eventsState = eventsState.toMutableList().apply { removeIf { it.id == eventId } }
-                            println("TEST DELETE")
                         }
                     } catch (e: Exception) {
                         //Handle error
                         println(e)
                     }
+                },
+                onUpdateClick = {
+                    //navHostController.navigate(Screen.UpdateEvent.route)
+                    Log.d("TEST", "Navigating with eventId: ${event.id}")
+                    navHostController.navigate("${Graph.UPDATE}/${event.id}")
                 })
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
         Spacer(modifier = Modifier.height(100.dp))
-        // Add ADMIN specific content here
     }
 }
 
@@ -625,48 +631,4 @@ fun UserView(logoutClick: () -> Unit) {
         Text("Welcome, User!", style = MaterialTheme.typography.headlineMedium)
         // Add USER specific content here
     }
-}
-
-@Composable
-fun TopBar(logoutClick: () -> Unit) {
-
-    val gradient = Brush.horizontalGradient(listOf(Color(0xFFCF753A), Color(0xFFB33161)))
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(gradient)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp)
-                .padding(8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = {}) {
-                Icon(Icons.Filled.ExitToApp, contentDescription = null, tint = Color.Transparent)
-            }
-
-            Text(
-                "Event Management",
-                color = Color.White,
-                style = MaterialTheme.typography.titleLarge,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.weight(1f)
-            )
-
-            IconButton(onClick = logoutClick) {
-                Icon(Icons.Filled.ExitToApp, contentDescription = null, tint = Color.White)
-            }
-        }
-    }
-}
-
-fun openAppSettings(activity: Activity) {
-    Intent(
-        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-        Uri.fromParts("package", activity.packageName, null)
-    ).also { activity.startActivity(it) }
 }
