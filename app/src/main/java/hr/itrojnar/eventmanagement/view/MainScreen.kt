@@ -625,6 +625,6 @@ fun UserView(logoutClick: () -> Unit) {
             .fillMaxSize()
     ) {
         TopBar(logoutClick)
-        Text("Welcome, User!", style = MaterialTheme.typography.headlineMedium)
+        Text(stringResource(R.string.welcome_user), style = MaterialTheme.typography.headlineMedium)
     }
 }
