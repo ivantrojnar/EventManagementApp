@@ -105,21 +105,14 @@ fun UpdateEventScreen(navController: NavHostController, eventDTO: EventDTO) {
     }
 
     if (result.isSuccess) {
-        // Parsing with milliseconds succeeded
         val dateTimeWithMillis = result.getOrThrow()
         selectedDate = dateTimeWithMillis.toLocalDate()
         selectedTime = dateTimeWithMillis.toLocalTime()
     } else {
-        // Parsing with milliseconds failed, try parsing without milliseconds
         val dateTimeWithoutMillis = LocalDateTime.parse(eventDTO.date, formatterWithoutMillis)
         selectedDate = dateTimeWithoutMillis.toLocalDate()
         selectedTime = dateTimeWithoutMillis.toLocalTime()
     }
-
-//    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
-//    val dateTime = LocalDateTime.parse(eventDTO.date, formatter)
-//    var selectedDate by remember { mutableStateOf(dateTime.toLocalDate()) }
-//    var selectedTime by remember { mutableStateOf(dateTime.toLocalTime()) }
 
     val context = LocalContext.current
     val activity = context.findActivity()
@@ -473,7 +466,12 @@ fun UpdateEventScreen(navController: NavHostController, eventDTO: EventDTO) {
                     runBlocking {
                         println(selectedDate)
                         println(selectedTime)
-                        val dateTimeString = "$selectedDate" + "T" + "$selectedTime:00.000000"
+                        val timeString = if (selectedTime.toString().length > 5) {
+                            "$selectedTime"
+                        } else {
+                            "$selectedTime:00.000000"
+                        }
+                        val dateTimeString = "$selectedDate" + "T" + timeString
                         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
                         val localDateTime = LocalDateTime.parse(dateTimeString, formatter)
                         eventViewModel.date.value = localDateTime.toString()
