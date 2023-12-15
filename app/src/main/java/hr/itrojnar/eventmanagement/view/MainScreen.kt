@@ -558,7 +558,7 @@ fun AdminView(
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                         shape = RoundedCornerShape(10.dp)
                     ) {
-                        Text("Create Event", fontSize = 15.sp, color = Color.White)
+                        Text(stringResource(R.string.create_event), fontSize = 15.sp, color = Color.White)
                     }
                 }
             }
@@ -605,13 +605,10 @@ fun AdminView(
                             eventsState = eventsState.toMutableList().apply { removeIf { it.id == eventId } }
                         }
                     } catch (e: Exception) {
-                        //Handle error
                         println(e)
                     }
                 },
                 onUpdateClick = {
-                    //navHostController.navigate(Screen.UpdateEvent.route)
-                    Log.d("TEST", "Navigating with eventId: ${event.id}")
                     navHostController.navigate("${Graph.UPDATE}/${event.id}")
                 })
                 Spacer(modifier = Modifier.height(16.dp))
@@ -629,6 +626,5 @@ fun UserView(logoutClick: () -> Unit) {
     ) {
         TopBar(logoutClick)
         Text("Welcome, User!", style = MaterialTheme.typography.headlineMedium)
-        // Add USER specific content here
     }
 }

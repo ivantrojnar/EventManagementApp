@@ -95,7 +95,6 @@ fun RootNavGraph(navController: NavHostController) {
             LaunchedEffect(argumentEventId) {
                 eventDTO = apiRepository.getEvent(accessToken, argumentEventId)
             }
-            //UpdateEventScreen(navController = navController, eventDTO = eventDTO)
             if (eventDTO != null) {
                 UpdateEventScreen(navController = navController, eventDTO = eventDTO!!)
             }

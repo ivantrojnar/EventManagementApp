@@ -27,6 +27,9 @@ import hr.itrojnar.eventmanagement.model.UserAuthDetails
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 import java.io.InputStream
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -87,6 +90,7 @@ fun Context.findActivity(): Activity? {
     var currentContext = this
     while (currentContext is ContextWrapper) {
         if (currentContext is Activity) {
+
             return currentContext
         }
         currentContext = currentContext.baseContext
@@ -115,6 +119,25 @@ suspend fun convertImageUriToBase64(context: Context, imageUri: Uri): String {
         }
         return@withContext ""
     }
+}
+
+fun convertBase64ToImageUri(context: Context, base64String: String): Uri? {
+    try {
+        // Decode the base64 string to a byte array
+        val decodedBytes = Base64.decode(base64String, Base64.DEFAULT)
+
+        // Create a temporary file to save the decoded byte array
+        val file = File(context.cacheDir, "temp_image.png")
+        val fos = FileOutputStream(file)
+        fos.write(decodedBytes)
+        fos.close()
+
+        // Get the Uri for the temporary file
+        return Uri.fromFile(file)
+    } catch (e: IOException) {
+        e.printStackTrace()
+    }
+    return null
 }
 
 fun formatDateAndTime(dateString: String): Pair<String, String>? {

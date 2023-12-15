@@ -41,6 +41,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -65,19 +66,24 @@ import com.vanpra.composematerialdialogs.datetime.time.TimePickerDefaults
 import com.vanpra.composematerialdialogs.datetime.time.timepicker
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import hr.itrojnar.eventmanagement.R
+import hr.itrojnar.eventmanagement.api.ApiRepository
+import hr.itrojnar.eventmanagement.api.RetrofitClient
 import hr.itrojnar.eventmanagement.model.CreateEventDTO
 import hr.itrojnar.eventmanagement.model.EventDTO
+import hr.itrojnar.eventmanagement.model.UpdateEventDTO
+import hr.itrojnar.eventmanagement.nav.Graph
 import hr.itrojnar.eventmanagement.utils.cleanBase64String
+import hr.itrojnar.eventmanagement.utils.convertBase64ToImageUri
 import hr.itrojnar.eventmanagement.utils.convertImageUriToBase64
 import hr.itrojnar.eventmanagement.utils.findActivity
+import hr.itrojnar.eventmanagement.utils.getAccessToken
 import hr.itrojnar.eventmanagement.viewmodel.EventViewModel
 import hr.itrojnar.eventmanagement.viewmodel.MainViewModel
 import kotlinx.coroutines.runBlocking
 import java.io.ByteArrayOutputStream
-import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -86,11 +92,52 @@ fun UpdateEventScreen(navController: NavHostController, eventDTO: EventDTO) {
     var showImagePickerDialog by remember { mutableStateOf(false) }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     val viewModel = viewModel<MainViewModel>()
-    val eventViewModel: EventViewModel = viewModel<EventViewModel>()
-    val dialogQueue = viewModel.visiblePermissionDialogQueue
+
+    val formatterWithMillis = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
+    val formatterWithoutMillis = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
+
+    var selectedDate by remember { mutableStateOf(LocalDateTime.now().toLocalDate()) }
+    var selectedTime by remember { mutableStateOf(LocalDateTime.now().toLocalTime()) }
+
+
+    val result = runCatching {
+        LocalDateTime.parse(eventDTO.date, formatterWithMillis)
+    }
+
+    if (result.isSuccess) {
+        // Parsing with milliseconds succeeded
+        val dateTimeWithMillis = result.getOrThrow()
+        selectedDate = dateTimeWithMillis.toLocalDate()
+        selectedTime = dateTimeWithMillis.toLocalTime()
+    } else {
+        // Parsing with milliseconds failed, try parsing without milliseconds
+        val dateTimeWithoutMillis = LocalDateTime.parse(eventDTO.date, formatterWithoutMillis)
+        selectedDate = dateTimeWithoutMillis.toLocalDate()
+        selectedTime = dateTimeWithoutMillis.toLocalTime()
+    }
+
+//    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
+//    val dateTime = LocalDateTime.parse(eventDTO.date, formatter)
+//    var selectedDate by remember { mutableStateOf(dateTime.toLocalDate()) }
+//    var selectedTime by remember { mutableStateOf(dateTime.toLocalTime()) }
 
     val context = LocalContext.current
     val activity = context.findActivity()
+
+    val apiRepository = ApiRepository(RetrofitClient.apiService)
+    val accessToken = getAccessToken(context)
+
+    val eventViewModel: EventViewModel = remember  {
+        EventViewModel().apply {
+            eventName.value = eventDTO.name
+            description.value = eventDTO.description
+            date.value = eventDTO.date
+            price.value = eventDTO.price.toString()
+            maxAttendees.value = eventDTO.maxAttendees.toString()
+            address.value = eventDTO.address
+        }
+    }
+    val dialogQueue = viewModel.visiblePermissionDialogQueue
 
     val focusManager = LocalFocusManager.current
 
@@ -163,6 +210,11 @@ fun UpdateEventScreen(navController: NavHostController, eventDTO: EventDTO) {
             },
             onDismissRequest = { showImagePickerDialog = false }
         )
+    } else {
+        if (imageUri == null) {
+            imageUri = convertBase64ToImageUri(context, eventDTO.picture!!)
+            eventViewModel.imageUri.value = eventDTO.picture
+        }
     }
 
     Box(
@@ -177,7 +229,7 @@ fun UpdateEventScreen(navController: NavHostController, eventDTO: EventDTO) {
                 .padding(bottom = 16.dp),
             contentAlignment = Alignment.TopCenter
         ) {
-            Text(text = stringResource(R.string.update_event), fontSize = 25.sp)
+            Text(text = stringResource(R.string.update_event), fontSize = 22.sp)
         }
 
         Column(
@@ -230,8 +282,6 @@ fun UpdateEventScreen(navController: NavHostController, eventDTO: EventDTO) {
             }
             val datePickerDialogState = rememberMaterialDialogState()
             val timePickerDialogState = rememberMaterialDialogState()
-            var selectedDate by remember { mutableStateOf(LocalDate.now()) }
-            var selectedTime by remember { mutableStateOf(LocalTime.now()) }
 
             MaterialDialog(
                 dialogState = datePickerDialogState,
@@ -428,24 +478,23 @@ fun UpdateEventScreen(navController: NavHostController, eventDTO: EventDTO) {
                         val localDateTime = LocalDateTime.parse(dateTimeString, formatter)
                         eventViewModel.date.value = localDateTime.toString()
 
-                        val newEvent =
-                            CreateEventDTO(
+                        val updatedEvent =
+                            UpdateEventDTO(
+                                eventDTO.id,
                                 eventViewModel.imageUri.value,
                                 eventViewModel.eventName.value,
                                 eventViewModel.maxAttendees.value.toInt(),
-                                0,
+                                eventViewModel.numAttendees.value,
                                 eventViewModel.address.value,
                                 eventViewModel.description.value,
                                 eventViewModel.date.value,
                                 eventViewModel.price.value.toBigDecimal()
                             )
-//                        val result = apiRepository.createEvent(
-//                            accessToken,
-//                            newEvent
-//                        )
-//
-//                        eventsState.add(result)
-                        //events.add(result)
+                        val result = apiRepository.updateEvent(
+                            accessToken,
+                            updatedEvent
+                        )
+                        navController.navigate(Graph.MAIN)
                     }
                 },
                 enabled = eventViewModel.isReadyToCreateEvent,
@@ -460,7 +509,11 @@ fun UpdateEventScreen(navController: NavHostController, eventDTO: EventDTO) {
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Text("Create Event", fontSize = 15.sp, color = Color.White)
+                Text(
+                    stringResource(id = R.string.update_event),
+                    fontSize = 15.sp,
+                    color = Color.White
+                )
             }
         }
     }
